@@ -1,9 +1,9 @@
 import logging.config
 import sqlite3
-from xenia import xeniaSQLite
 from datetime import datetime, timedelta
 from pytz import timezone
 from stats import vectorMagDir
+from .xenia import xeniaSQLite
 
 
 class wqDB(xeniaSQLite):

@@ -324,7 +324,7 @@ class timestamp_lkp(Base):
     filepath = Column(String(200))
 
 
-class xeniaAlchemy(object):
+class xeniaAlchemy:
     def __init__(self, logger=True):
         self.dbEngine = None
         self.metadata = None
@@ -333,20 +333,21 @@ class xeniaAlchemy(object):
         if logger:
             self.logger = logging.getLogger(__name__)
 
-    def connectDB(self, databaseType, dbUser, dbPwd, dbHost, dbName, printSQL=False):
+    def connect_sqlite_db(self, sqlite_filename):
+        connection_string = f"sqlite:///{sqlite_filename}"
+        return self.connect(connection_string)
 
+    def connect_postgres_db(self, dbUser, dbPwd, dbHost, dbName, printSQL=False):
+        if (dbHost != None and len(dbHost)):
+            connection_string = f"postgres://{dbUser}:{dbPwd}@{dbHost}/{dbName}"
+        else:
+            connection_string = f"postgres://{dbUser}:{dbPwd}@/{dbName}"
+        return self.connect(connection_string)
+
+    def connect(self, connection_string, printSQL=False):
         try:
             # Connect to the database
-            if databaseType == 'postgres':
-                if (dbHost != None and len(dbHost)):
-                    connectionString = "%s://%s:%s@%s/%s" % (databaseType, dbUser, dbPwd, dbHost, dbName)
-                else:
-                    connectionString = "%s://%s:%s@/%s" % (databaseType, dbUser, dbPwd, dbName)
-
-            elif databaseType == 'sqlite':
-                connectionString = "%s:///%s" % (databaseType, dbHost)
-
-            self.dbEngine = create_engine(connectionString, echo=printSQL)
+            self.dbEngine = create_engine(connection_string, echo=printSQL)
 
             # metadata object is used to keep information such as datatypes for our table's columns.
             self.metadata = MetaData()
