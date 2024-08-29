@@ -374,11 +374,11 @@ class xeniaAlchemy:
                 .one()
             return (platRec.row_id)
         except NoResultFound as e:
-            if (self.logger != None):
-                self.logger.debug(e)
+            self.session.rollback()
+            self.logger.debug(e)
         except exc.InvalidRequestError as e:
-            if (self.logger != None):
-                self.logger.exception(e)
+            self.session.rollback()
+            self.logger.exception(e)
         return (None)
 
     """
@@ -444,10 +444,10 @@ class xeniaAlchemy:
                 self.logger.debug(
                     "Platform: %s(%d) added to database." % (platformRec.platform_handle, platformRec.row_id))
         except Exception as e:
-            if (self.logger):
-                self.logger.exception(e)
+            self.session.rollback()
+            self.logger.exception(e)
 
-        return (platformRec.row_id)
+        return platformRec.row_id
 
     """
     Function: addOrganization
@@ -474,12 +474,12 @@ class xeniaAlchemy:
                 .one()
             return (orgRec.row_id)
         except NoResultFound as e:
-            if (self.logger != None):
-                self.logger.debug(e)
+            self.session.rollback()
+            self.logger.debug(e)
         except exc.InvalidRequestError as e:
-            if (self.logger != None):
-                self.logger.exception(e)
-        return (None)
+            self.session.rollback()
+            self.logger.exception(e)
+        return None
 
     """
     Function: sensorExists
@@ -509,13 +509,13 @@ class xeniaAlchemy:
                 .filter(uom_type.standard_name == uom).one()
             return (rec.row_id)
         except NoResultFound as e:
-            if (self.logger != None):
-                self.logger.debug(e)
+            self.session.rollback()
+            self.logger.debug(e)
         except exc.InvalidRequestError as e:
-            if (self.logger != None):
-                self.logger.exception(e)
+            self.session.rollback()
+            self.logger.exception(e)
 
-        return (None)
+        return None
 
     def newSensor(self, rowEntryDate, obsName, uom, platformId, active=1, fixedZ=0, sOrder=1, mTypeId=None,
                   addObsAndUOM=False):
@@ -560,7 +560,7 @@ class xeniaAlchemy:
                 else:
                     if self.logger:
                         self.logger.error("m_type does not exist, cannot add sensor: %s(%s) platform: %d" % (
-                        obsName, uom, platformId))
+                            obsName, uom, platformId))
                         return (None)
 
             sensorRec = sensor(row_entry_date=rowEntryDate,
@@ -600,14 +600,13 @@ class xeniaAlchemy:
                 .filter(uom_type.standard_name == uom).one()
             return (rec.row_id)
         except NoResultFound as e:
-            if (self.logger != None):
-                self.logger.debug("m_type %s(%s) does not exist." % (obsName, uom))
-                # self.logger.debug(e)
+            self.session.rollback()
+            self.logger.debug("m_type %s(%s) does not exist." % (obsName, uom))
         except exc.InvalidRequestError as e:
-            if (self.logger != None):
-                self.logger.exception(e)
+            self.session.rollback()
+            self.logger.exception(e)
 
-        return (None)
+        return None
 
     """
     Function: addMType
@@ -628,18 +627,16 @@ class xeniaAlchemy:
             nextRowId = self.session.query(func.max(m_type.row_id)).one()[0]
             nextRowId += 1
         except Exception as e:
-            if (self.logger):
-                self.logger.exception(e)
+            self.session.rollback()
+            self.logger.exception(e)
         else:
             mTypeRec = m_type(row_id=nextRowId, num_types=1, m_scalar_type_id=scalarID, description=description)
             rowId = self.addRec(mTypeRec, True)
-            if (rowId == None):
-                if (self.logger):
-                    self.logger.error("Unable to add scalarID: %d to m_type table." % (scalarID))
+            if rowId == None:
+                self.logger.error("Unable to add scalarID: %d to m_type table." % (scalarID))
             else:
-                if (self.logger):
-                    self.logger.debug("Added scalarID: %d to m_type table." % (scalarID))
-        return (rowId)
+                self.logger.debug("Added scalarID: %d to m_type table." % (scalarID))
+        return rowId
 
     """
     Function: obsTypeExists
@@ -659,11 +656,11 @@ class xeniaAlchemy:
                 .one()
             rowId = rec.row_id
         except NoResultFound as e:
-            if (self.logger != None):
-                self.logger.debug("Observation: %s does not exist in obs_type table." % (obsName))
+            self.session.rollback()
+            self.logger.debug("Observation: %s does not exist in obs_type table." % (obsName))
         except exc.InvalidRequestError as e:
-            if (self.logger != None):
-                self.logger.exception(e)
+            self.session.rollback()
+            self.logger.exception(e)
 
         return (rowId)
 
@@ -683,18 +680,16 @@ class xeniaAlchemy:
             nextRowId = self.session.query(func.max(obs_type.row_id)).one()[0]
             nextRowId += 1
         except Exception as e:
-            if (self.logger):
-                self.logger.exception(e)
+            self.session.rollback()
+            self.logger.exception(e)
         else:
             obsTypeRec = obs_type(row_id=nextRowId, standard_name=obsName)
             rowId = self.addRec(obsTypeRec, True)
             if (rowId == None):
-                if (self.logger):
-                    self.logger.error("Unable to add obs: %s to obs_type table." % (obsName))
+                self.logger.error("Unable to add obs: %s to obs_type table." % (obsName))
             else:
-                if (self.logger):
-                    self.logger.debug("Added obs: %s to obs_type table." % (obsName))
-        return (rowId)
+                self.logger.debug("Added obs: %s to obs_type table." % (obsName))
+        return rowId
 
     """
     Function: uomTypeExists
@@ -714,12 +709,12 @@ class xeniaAlchemy:
                 .one()
             rowId = rec.row_id
         except NoResultFound as e:
-            if (self.logger != None):
-                self.logger.debug("UOM: %s does not exist in obs_type table." % (uomName))
+            self.session.rollback()
+            self.logger.debug("UOM: %s does not exist in obs_type table." % (uomName))
         except exc.InvalidRequestError as e:
-            if (self.logger != None):
-                self.logger.exception(e)
-        return (rowId)
+            self.session.rollback()
+            self.logger.exception(e)
+        return rowId
 
     """
     Function: addUOMType
@@ -737,8 +732,8 @@ class xeniaAlchemy:
             nextRowId = self.session.query(func.max(uom_type.row_id)).one()[0]
             nextRowId += 1
         except Exception as e:
-            if (self.logger):
-                self.logger.exception(e)
+            self.session.rollback()
+            self.logger.exception(e)
         else:
             uomTypeRec = uom_type(row_id=nextRowId, standard_name=uomName)
             rowId = self.addRec(uomTypeRec, True)
@@ -748,7 +743,7 @@ class xeniaAlchemy:
             else:
                 if (self.logger):
                     self.logger.debug("Added uom: %s to obs_type table." % (uomName))
-        return (rowId)
+        return rowId
 
     """
     Function: existsScalarType
@@ -772,14 +767,14 @@ class xeniaAlchemy:
                 .one()
             rowId = rec.row_id
         except NoResultFound as e:
-            if (self.logger != None):
-                self.logger.debug(
-                    "Scalar type for obs_type_id: %d uom_type_id: %d does not exist in m_scalar_type table." % (
+            self.session.rollback()
+            self.logger.debug(
+                "Scalar type for obs_type_id: %d uom_type_id: %d does not exist in m_scalar_type table." % (
                     obsTypeID, uomTypeID))
         except exc.InvalidRequestError as e:
-            if (self.logger != None):
-                self.logger.exception(e)
-        return (rowId)
+            self.session.rollback()
+            self.logger.exception(e)
+        return rowId
 
     """
     Function: addScalarType
@@ -801,8 +796,8 @@ class xeniaAlchemy:
             nextRowId = self.session.query(func.max(m_scalar_type.row_id)).one()[0]
             nextRowId += 1
         except Exception as e:
-            if (self.logger):
-                self.logger.exception(e)
+            self.session.rollback()
+            self.logger.exception(e)
         else:
             scalarRec = m_scalar_type(row_id=nextRowId, obs_type_id=obsTypeID, uom_type_id=uomTypeID)
             rowId = self.addRec(scalarRec, True)
@@ -810,12 +805,12 @@ class xeniaAlchemy:
                 if (self.logger):
                     self.logger.error(
                         "Unable to add m_scalar_type: obs_type_id: %d  uom_type_id: %d to m_scalar_type table." % (
-                        obsTypeID, uomTypeID))
+                            obsTypeID, uomTypeID))
             else:
                 if (self.logger):
                     self.logger.debug(
                         "Added m_scalar_type: obs_type_id: %d  uom_type_id: %d to m_scalar_type table." % (
-                        obsTypeID, uomTypeID))
+                            obsTypeID, uomTypeID))
         return (rowId)
 
     def getCurrentPlatformStatus(self, platformHandle):
@@ -824,40 +819,40 @@ class xeniaAlchemy:
                 .filter(platform_status.platform_handle == platformHandle).one()
             return (rec.status)
         except NoResultFound as e:
-            if (self.logger != None):
-                self.logger.debug(e)
+            self.session.rollback()
+            self.logger.debug(e)
         except exc.InvalidRequestError as e:
-            if (self.logger != None):
-                self.logger.exception(e)
-        return (None)
+            self.session.rollback()
+            self.logger.exception(e)
+        return None
 
     def getCurrentSensorStatus(self, obsName, platformHandle):
         try:
             rec = self.session.query(platform_status.status) \
                 .filter(platform.platform_handle == platformHandle) \
                 .filter(sensor_status.sensor_name == obsName).one()
-            return (rec.status)
+            return rec.status
         except NoResultFound as e:
-            if (self.logger != None):
-                self.logger.debug(e)
+            self.session.rollback()
+            self.logger.debug(e)
         except exc.InvalidRequestError as e:
-            if (self.logger != None):
-                self.logger.exception(e)
-        return (None)
+            self.session.rollback()
+            self.logger.exception(e)
+        return None
 
     def platformTypeExists(self, platformType):
         try:
             platRec = self.session.query(platform_type.row_id) \
                 .filter(platform_type.type_name == platformType) \
                 .one()
-            return (platRec.row_id)
+            return platRec.row_id
         except NoResultFound as e:
-            if (self.logger != None):
-                self.logger.debug(e)
+            self.session.rollback()
+            self.logger.debug(e)
         except exc.InvalidRequestError as e:
-            if (self.logger != None):
-                self.logger.exception(e)
-        return (None)
+            self.session.rollback()
+            self.logger.exception(e)
+        return None
 
     def addPlatformType(self, typeName, description="", commit=False):
         platType = None
@@ -869,9 +864,8 @@ class xeniaAlchemy:
         # Trying to add record that already exists.
         except exc.IntegrityError as e:
             self.session.rollback()
-            if (self.logger != None):
-                self.logger.exception(e)
-        return (platType)
+            self.logger.exception(e)
+        return platType
 
     def addRec(self, rec, commit=False):
         try:
@@ -882,8 +876,7 @@ class xeniaAlchemy:
         # Trying to add record that already exists.
         except exc.IntegrityError as e:
             self.session.rollback()
-            if (self.logger != None):
-                self.logger.error("Record already exists.")
+            self.logger.error("Record already exists.")
                 # self.logger.exception(e)
         return None
 
@@ -1155,7 +1148,7 @@ class xeniaAlchemy:
                     for dir_row in wnd_dir_recs:
                         if spd_row.m_date == dir_row.m_date:
                             self.logger.debug("Calculating vector for Speed(%s): %f Dir(%s): %f" % (
-                            spd_row.m_date, spd_row.m_value, dir_row.m_date, dir_row.m_value))
+                                spd_row.m_date, spd_row.m_value, dir_row.m_date, dir_row.m_value))
                             # Vector using both speed and direction.
                             wind_components.append(vect_obj.calcVector(spd_row.m_value, dir_row.m_value))
                             # VEctor with speed as constant(1), and direction.
@@ -1181,7 +1174,7 @@ class xeniaAlchemy:
                     north_comp_avg = north_comp_avg / len(dir_components)
                     spd_avg, vectordir_avg = vect_obj.calcMagAndDir(east_comp_avg, north_comp_avg)
                     self.logger.debug("Platform: %s Scalar Speed Avg: %f Vector Dir Avg: %f" % (
-                    platName, scalar_spd_avg, vectordir_avg))
+                        platName, scalar_spd_avg, vectordir_avg))
 
                 # 2013-11-21 DWR Add check to verify we have components. Also reset the east_comp_avg and north_comp_avg to 0
                 # before doing calcs.
