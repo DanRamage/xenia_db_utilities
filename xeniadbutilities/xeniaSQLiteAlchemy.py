@@ -325,29 +325,27 @@ class timestamp_lkp(Base):
 
 
 class xeniaAlchemy:
-    def __init__(self, logger=True):
+    def __init__(self, logger_name=""):
         self.dbEngine = None
         self.metadata = None
         self.session = None
-        self.logger = logger
-        if logger:
-            self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(logger_name)
 
-    def connect_sqlite_db(self, sqlite_filename):
+    def connect_sqlite_db(self, sqlite_filename, print_sql=False):
         connection_string = f"sqlite:///{sqlite_filename}"
         return self.connect(connection_string)
 
-    def connect_postgres_db(self, dbUser, dbPwd, dbHost, dbName, printSQL=False):
-        if (dbHost != None and len(dbHost)):
-            connection_string = f"postgres://{dbUser}:{dbPwd}@{dbHost}/{dbName}"
+    def connect_postgres_db(self, db_user, db_pwd, db_host, db_name, print_sql=False):
+        if db_host != None and len(db_host):
+            connection_string = f"postgres://{db_user}:{db_pwd}@{db_host}/{db_name}"
         else:
-            connection_string = f"postgres://{dbUser}:{dbPwd}@/{dbName}"
+            connection_string = f"postgres://{db_user}:{db_pwd}@/{db_name}"
         return self.connect(connection_string)
 
-    def connect(self, connection_string, printSQL=False):
+    def connect(self, connection_string, print_sql=False):
         try:
             # Connect to the database
-            self.dbEngine = create_engine(connection_string, echo=printSQL)
+            self.dbEngine = create_engine(connection_string, echo=print_sql)
 
             # metadata object is used to keep information such as datatypes for our table's columns.
             self.metadata = MetaData()
