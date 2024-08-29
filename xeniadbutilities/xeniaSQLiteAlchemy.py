@@ -4,22 +4,18 @@ Date: 2013-01-02
 Function: xeniaAlchemy::obsTypeExists
 Changes: Fixed up variable name in except handler
 """
-import time
 
-from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, Float, func
+from sqlalchemy import Table, Column, Integer, String, MetaData, Float, func
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-# from sqlalchemy.orm import eagerload
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import exc
 from sqlalchemy.orm.exc import *
-# from geoalchemy import *
-# from geoalchemy2 import Geometry
 import logging.config
 from datetime import datetime
-from stats import vectorMagDir
+from .stats import vectorMagDir
 
 Base = declarative_base()
 
@@ -882,13 +878,14 @@ class xeniaAlchemy:
             self.session.add(rec)
             if (commit):
                 self.session.commit()
+            return rec.row_id
         # Trying to add record that already exists.
         except exc.IntegrityError as e:
             self.session.rollback()
             if (self.logger != None):
                 self.logger.error("Record already exists.")
                 # self.logger.exception(e)
-        return (rec.row_id)
+        return None
 
     def addPlatform(self, platformRec, commit=False):
         return (self.addRec(platformRec, commit))
